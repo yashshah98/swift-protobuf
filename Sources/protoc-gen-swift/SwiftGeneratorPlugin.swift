@@ -35,14 +35,27 @@ struct SwiftGeneratorPlugin: CodeGenerator {
         var errorString: String? = nil
         for fileDescriptor in files {
             let fileGenerator = FileGenerator(fileDescriptor: fileDescriptor, generatorOptions: options)
-            var printer = CodePrinter(addNewlines: true)
-            fileGenerator.generateOutputFile(printer: &printer, errorString: &errorString)
-            if let errorString = errorString {
-                // If generating multiple files, scope the message with the file that triggered it.
-                let fullError = files.count > 1 ? "\(fileDescriptor.name): \(errorString)" : errorString
-                throw GenerationError.message(message: fullError)
+
+            if options.outputNaming == .oneFilePerMessage {
+                // Zomato: generate one .swift file per proto message for incremental compilation.
+                let outputFiles = fileGenerator.generateOutputFilesPerMessage(errorString: &errorString)
+                if let err = errorString {
+                    let fullError = files.count > 1 ? "\(fileDescriptor.name): \(err)" : err
+                    throw GenerationError.message(message: fullError)
+                }
+                for (filename, contents) in outputFiles {
+                    try generatorOutputs.add(fileName: filename, contents: contents)
+                }
+            } else {
+                var printer = CodePrinter(addNewlines: true)
+                fileGenerator.generateOutputFile(printer: &printer, errorString: &errorString)
+                if let errorString = errorString {
+                    // If generating multiple files, scope the message with the file that triggered it.
+                    let fullError = files.count > 1 ? "\(fileDescriptor.name): \(errorString)" : errorString
+                    throw GenerationError.message(message: fullError)
+                }
+                try generatorOutputs.add(fileName: fileGenerator.outputFilename, contents: printer.content)
             }
-            try generatorOutputs.add(fileName: fileGenerator.outputFilename, contents: printer.content)
         }
     }
 

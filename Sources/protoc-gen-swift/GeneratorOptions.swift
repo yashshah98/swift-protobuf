@@ -15,6 +15,7 @@ package class GeneratorOptions {
         case fullPath
         case pathToUnderscores
         case dropPath
+        case oneFilePerMessage
 
         init?(flag: String) {
             switch flag.lowercased() {
@@ -24,6 +25,8 @@ package class GeneratorOptions {
                 self = .pathToUnderscores
             case "droppath", "drop_path":
                 self = .dropPath
+            case "onefilepermessage", "one_file_per_message":
+                self = .oneFilePerMessage
             default:
                 return nil
             }
