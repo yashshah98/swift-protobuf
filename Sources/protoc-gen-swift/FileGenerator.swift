@@ -35,6 +35,9 @@ class FileGenerator {
             return dirWithUnderscores + pathParts.base + ext
         case .dropPath:
             return pathParts.base + ext
+        case .oneFilePerMessage:
+            // Not used in this mode — generateOutputFilesPerMessage() produces per-message filenames instead.
+            return pathParts.base + ext
         }
     }
 
